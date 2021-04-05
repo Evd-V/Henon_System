@@ -1,51 +1,57 @@
 import numpy as np
-from matplotlib.pyplot import figure, show
 
-def Henon(Xstart, Ystart, Iterations, a, b):
+def Henon(Xstart, Ystart, Iterations, a, b, div=False, threshold=1e3):
+    ''' Function that calculates the location of points according to the Hénon map.
+
+        Input:      Xstart: initial x condition (float);
+                    
+                    Ystart: initial y condition (float);
+                    
+                    Iterations: number of iterations (integer);
+                    
+                    a: value for parameter a (float);
+                    
+                    b: value for parameter b (float);
+
+                    div: parameter that can be used if we expect the values for
+                         x and y to diverge. If false (default) then the expectation
+                         ist that there is convergence; if true then divergence
+                         is expected (boolean);
+
+                    threshold: the maximum value an x or y coordinate can have.
+                               If this value is exceeded than divergence is
+                               assumed and the previously generated values are
+                               returned (float);
+                               
+
+        Returns:    Xvals: all generated x values (list);
+                    
+                    Yvals: all generated y values (list);
     '''
-        Function that calculates the location of points according to the Hénon map.
-        Input: Xstart = floating point number; Ystart = floating point number; Iterations = integer;
-               a = floating point number; b = floating point number.
-        Returns: Xvals = list, Yvals = list
-    '''
+
     # The initial values
     Xvals = [Xstart]
     Yvals = [Ystart]
-    
+
+    # Improvement in computing speed
+    Xadd = Xvals.append
+    Yadd = Yvals.append
+
     # Finding all other values
     for i in range(Iterations):
-        X_arr = Xvals[i]         # Slight improvement in computing speed
-        Xvals.append(Yvals[i] + 1 - a * X_arr * X_arr)
-        Yvals.append(b * X_arr)
-            
+
+        # Slight improvement in computing speed
+        X_arr = Xvals[i]
+        Y_arr = Yvals[i]
+
+        # Calculating the new x and y values
+        Xadd(Y_arr + 1 - a * X_arr * X_arr)
+        Yadd(b * X_arr)
+
+        # Checking if we expect divergence
+        if div:
+            # Checking if it diverges
+            if abs(X_arr) > threshold or abs(Yvals[i]) > threshold:
+                return Xvals, Yvals
+
     return Xvals, Yvals
-
-# Creating the starting values
-X0 = 0
-Y0 = 0
-It = int(1e5)
-Av = 1.4
-Bv = 0.3
-
-# Calculating the points of the Hénon attractor
-Xvalues, Yvalues = Henon(X0, Y0, It, Av, Bv)
-
-# ------------------ #
-Markersize = 0.0004
-
-# Plotting
-fig = figure(figsize=(10,8))
-frame = fig.add_subplot(1,1,1)
-
-frame.scatter(Xvalues, Yvalues, s=Markersize, label='points', color='darkblue', marker='.')
-
-frame.set_title(f'Hénon attractor with {It} points')
-frame.set_xlabel('x')
-frame.set_ylabel('y')
-
-frame.grid()
-
-# Uncomment to save the figure
-#fig.savefig('Hénon_map_1e6.pdf')
-
-show()
