@@ -8,22 +8,21 @@ def inner_vect(vect1, vect2):
     values = [vect1[i] * vect2[i] for i in range(len(vect1))]
     return sum(values)[0]
     
-def Gram_Schmidt_rev(vectors, twoD=True):
-    """
-    """
+def proj_vect(vect1, vect2):
+    return (inner_vect(vect1, vect2) / norm_vect(vect1)) * vect1
     
-    if twoD:
-        Sum = (inner_vect(vectors[0], vectors[1]) / norm_vect(vectors[0])) * vectors[0]
-        New_vect = vectors[1] - Sum
-        return [vectors[0], New_vect]
-        
-    else:
-        basis = [vectors[0]]
-        for v in range(1, L):
-            Sum = sum((np.dot(vectors[v], b) * b / np.linalg.norm(b)) for b in basis)
-            basis.append(vectors[v] - Sum)
-
-        return np.array(basis)
+def Gram_Schmidt_rev(vectors):
+    """ 
+    """
+    basis = [vectors[0]]
+    for v in range(1, len(vectors)):
+        for j in range(v):
+            value = proj_vect(vectors[j], vectors[v])
+            new_vect = vectors[v] - value
+            
+        basis.append(new_vect)
+            
+    return basis
 
 def Lyapunov(N, basis, xvalues, k):
     """ 
