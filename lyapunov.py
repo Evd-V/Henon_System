@@ -32,50 +32,44 @@ def Gram_Schmidt_rev(vectors):
             
     return basis
 
-def Lyapunov(N, basis, xvalues, k):
-    """ Function that calculates the Lyapunov exponents. Still work in progress.
+def Lyapunov(N, basis, xvalues):
+    """ Function that calculates the Lyapunov exponents for the Henon map.
+        For now this function only works for the Hénon map, still working on making it more general.
+    
+    
+        Input:      N       = number of loops that have to be computed (integer);
+                    basis   = the standard basis vectors in n dimensions. The syntax is for example: 
+                              [e1, e2] where e1 = [[1], [0]] and e2 = [[0], [1]] (list);
+                    xvalues = list of x values of the Hénon map;
+                    
+        Returns:    lya     = list containing the computed lyapunov exponents.
     """
     
-    dim = len(basis)
-    exponents = np.zeros(dim)
+    dim = len(basis)                # Dimension
+    exponents = np.zeros(dim)       # Array to put the intermediate results in
     
-    # List to put the rescaled factors in
-    resc = []
+    # First step
+    J = np.array([[-2.8*xvalues[0], 1], [0.3, 0]])          # The 'first' Jacobian
+    v_1k = [np.matmul(J, b) for b in basis]                 # Calculating the 'first' v_nk
+    u_nk = Gram_Schmidt([v_1k[0], v_1k[1]])                 # Calculating the 'first' u_nk
     
-    J = np.array([[-2.8*xvalues[0], 1], [0.3, 0]])
-    u_1k = [b for b in basis]
-    v_1k = [np.matmul(J, u) for u in u_1k]
+    # Adding to 'exponents', used for the calculating of the Lyapunov exponents
+    for i in range(dim): exponents[i] += np.log(norm_vect(u_nk[i]))
     
-    u_nk = Gram_Schmidt_rev([v_1k[0], v_1k[1]])
-    resc.append(u_nk[k])
-    u_nk = [u / np.linalg.norm(u) for u in u_nk]
+    u_nk = [u / norm_vect(u) for u in u_nk]                 # Normalizing
     
     for n in range(1, N):
         
-        # Calculating v_nk
-        v_nk = [np.matmul(J, u) for u in u_nk]
+        v_nk = [np.matmul(J, u) for u in u_nk]              # Calculating v_nk
+        u_nk = Gram_Schmidt([v_nk[i] for i in range(dim)])  # Gram-Schmidt
         
-        # Gram-Schmidt
-        u_nk = Gram_Schmidt_rev([v_nk[0], v_nk[1]])
+        # Adding the newly obtained value to the list
+        for i in range(dim): exponents[i] += np.log(norm_vect(u_nk[i]))
         
-        # Adding the newly obtained vector to the list
-        #for i in range(dim):
-        #    exponents[i] += u_nk[i]
+        J = np.array([[-2.8*xvalues[n], 1], [0.3, 0]])      # Updating the Jacobian matrix
+        u_nk = [u / norm_vect(u) for u in u_nk]             # Normalizing
         
-        resc.append(u_nk[k])
-        
-        # Updating the Jacobian matrix
-        J = np.array([[-2.8*xvalues[n], 1], [0.3, 0]])
-        
-        # Normalizing
-        u_nk = [u / norm_vect(u) for u in u_nk]
-        
-    #lyas = []
-    #for i in range(dim):
-    #    lyas.append([sum(np.log(norm_vect(u))) for u in exponents[i]])
+    # Calculating the lyapunov exponents
+    lya = [exponents[i] / N for i in range(dim)]
     
-    log_ = [np.log(norm_vect(u)) for u in resc]
-    
-    lya_k = sum(log_) / N
-    
-    return lya_k#, lyas
+    return lya
