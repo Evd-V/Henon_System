@@ -95,11 +95,10 @@ def calc_lya_henon(Ninit, cutoff, start, A, B):
         Returns:    lya     = the Lyapunov exponents for the Hénon map (list).
     """
     
-    Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points on the Hénon map
-    Xred = Xvalues[cutoff:]                                         # Throwing away first 'cutoff' x values
-    
+    Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points of the Hénon map    
     basisVects = basis(len(start))                                  # Basis vectors
     
-    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xred)        # Calculating the Lyapunov exponents
+    # Calculating the Lyapunov exponents
+    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
     
     return lya
