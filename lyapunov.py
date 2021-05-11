@@ -51,7 +51,7 @@ def Lyapunov(N, basis, xvalues):
     # First step
     J = np.array([[-2.8*xvalues[0], 1], [0.3, 0]])          # The 'first' Jacobian
     v_1k = [np.matmul(J, b) for b in basis]                 # Calculating the 'first' v_nk
-    u_nk = Gram_Schmidt([v_1k[0], v_1k[1]])                 # Calculating the 'first' u_nk
+    u_nk = Gram_Schmidt([v_1k[i] for i in range(dim)])      # Calculating the 'first' u_nk
     
     # Adding to 'exponents', used for the calculating of the Lyapunov exponents
     for i in range(dim): exponents[i] += np.log(norm_vect(u_nk[i]))
@@ -63,7 +63,7 @@ def Lyapunov(N, basis, xvalues):
         v_nk = [np.matmul(J, u) for u in u_nk]              # Calculating v_nk
         u_nk = Gram_Schmidt([v_nk[i] for i in range(dim)])  # Gram-Schmidt
         
-        # Adding the newly obtained value to the list
+        # Adding the newly obtained value to the array 'exponents'
         for i in range(dim): exponents[i] += np.log(norm_vect(u_nk[i]))
         
         J = np.array([[-2.8*xvalues[n], 1], [0.3, 0]])      # Updating the Jacobian matrix
