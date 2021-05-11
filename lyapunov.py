@@ -3,16 +3,25 @@ import numpy as np
 def norm_vect(vector):
     """ Calculate the norm of a vector. """
     values = [i*i for i in vector]
-    return sum(values)[0]
+    return sum(values)
 
 def inner_vect(vect1, vect2):
     """ Calculate the inner product of two vectors. """
     values = [vect1[i] * vect2[i] for i in range(len(vect1))]
-    return sum(values)[0]
+    return sum(values)
 
 def proj_vect(vect1, vect2):
     """ Calculate the projection of vector v onto vector u. """
     return (inner_vect(vect1, vect2) / norm_vect(vect1)) * vect1
+
+def basis(dim):
+    """ Creating the standard basis vectors for n dimensions. """
+    
+    basisVects = [np.zeros(dim) for i in range(dim)]    
+    for i in range(dim):
+        basisVects[i][i] += 1
+    
+    return basisVects
     
 def Gram_Schmidt_rev(vectors):
     """ Function that uses the Gram-Schmidt process to orthogonalize a set of n-dimensional 
@@ -71,5 +80,26 @@ def Lyapunov(N, basis, xvalues):
         
     # Calculating the lyapunov exponents
     lya = [exponents[i] / N for i in range(dim)]
+    
+    return lya
+
+def calc_lya_henon(Ninit, cutoff, start, A, B):
+    """ Calculation of the Lyapunov exponents specifically for the Hénon map.
+    
+        Input:      Ninit   = number of iterations for the Hénon map (integer);
+                    Cutoff  = number of points that get thrown away (integer);
+                    start   = intial starting point for the Hénon map (tuple);
+                    A       = value of the 'a' parameter in the iterative equations (float);
+                    B       = value of the 'b' parameter in the iterative equations (float);
+                
+        Returns:    lya     = the Lyapunov exponents for the Hénon map (list).
+    """
+    
+    Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points on the Hénon map
+    Xred = Xvalues[cutoff:]                                         # Throwing away first 'cutoff' x values
+    
+    basisVects = basis(len(start))                                  # Basis vectors
+    
+    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xred)        # Calculating the Lyapunov exponents
     
     return lya
