@@ -83,7 +83,7 @@ def Lyapunov(N, basis, xvalues):
     
     return lya
 
-def calc_lya_henon(Ninit, cutoff, start, A, B):
+def calc_lya_henon(Ninit, cutoff, start, A, B, thres=1e5):
     """ Calculation of the Lyapunov exponents specifically for the Hénon map.
     
         Input:      Ninit   = number of iterations for the Hénon map (integer);
@@ -95,10 +95,39 @@ def calc_lya_henon(Ninit, cutoff, start, A, B):
         Returns:    lya     = the Lyapunov exponents for the Hénon map (list).
     """
     
-    Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points of the Hénon map    
-    basisVects = basis(len(start))                                  # Basis vectors
+    if type(A) == float and type(B) == float:
+        Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points of the Hénon map    
+        basisVects = basis(len(start))                                  # Basis vectors
+
+        if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: return None
+
+        # Calculating the Lyapunov exponents
+        lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
+        
+        return lya
+        
+    # Still work in progress!
+    else:
+        all_exp1, all_exp2 = [], []
+        for a in A:
+            a_exp1 = []
+            a_exp2 = []
+            for b in B:
+                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b)       # Generating the points of the Hénon map    
+                basisVects = basis(len(start))                                  # Basis vectors
+                
+                #print(a, b)
+                if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: continue
+
+                # Calculating the Lyapunov exponents
+                lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
+                
+                sort = np.sort(lya)
+                
+                a_exp1.append(sort[0])
+                a_exp2.append(sort[1])
+                
+            all_exp1.append(a_exp1)
+            all_exp2.append(a_exp2)
     
-    # Calculating the Lyapunov exponents
-    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
-    
-    return lya
+        return all_exp1, all_exp2
