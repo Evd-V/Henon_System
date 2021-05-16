@@ -1,4 +1,5 @@
 import numpy as np
+from Full_Attractor import Henon
 
 def norm_vect(vector):
     """ Calculate the norm of a vector. """
@@ -83,7 +84,7 @@ def Lyapunov(N, basis, xvalues):
     
     return lya
 
-def calc_lya_henon(Ninit, cutoff, start, A, B, thres=1e5):
+def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     """ Calculation of the Lyapunov exponents specifically for the Hénon map.
     
         Input:      Ninit   = number of iterations for the Hénon map (integer);
@@ -106,24 +107,30 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, thres=1e5):
         
         return lya
         
-    # Still work in progress!
     else:
         all_exp1, all_exp2 = [], []
         for a in A:
             a_exp1 = []
             a_exp2 = []
             for b in B:
-                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b)       # Generating the points of the Hénon map    
+                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map    
                 basisVects = basis(len(start))                                  # Basis vectors
                 
-                #print(a, b)
-                if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: continue
-
+                try:
+                    if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres:
+                        a_exp1.append(0)
+                        a_exp2.append(0)
+                        continue
+                        
+                except:
+                    a_exp1.append(0)
+                    a_exp2.append(0)
+                    continue
+                        
                 # Calculating the Lyapunov exponents
                 lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
                 
                 sort = np.sort(lya)
-                
                 a_exp1.append(sort[0])
                 a_exp2.append(sort[1])
                 
@@ -131,3 +138,8 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, thres=1e5):
             all_exp2.append(a_exp2)
     
         return all_exp1, all_exp2
+    
+def create_lya_grid(a_vals, b_vals, start=(0,0), N=int(1e4), cutoff=int(1e3), div=True):
+    """ Function that calculates the grid for a given arrays of a and b values. """
+    vals = np.array(calc_lya_henon(N, cutoff, start, a_vals, b_vals, div=div))
+    return vals[0], vals[1]
