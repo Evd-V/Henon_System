@@ -110,32 +110,23 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     else:
         all_exp1, all_exp2 = [], []
         for a in A:
-            a_exp1 = []
-            a_exp2 = []
+            a_exp1, a_exp2 = [], []
             for b in B:
                 Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map    
                 basisVects = basis(len(start))                                  # Basis vectors
                 
                 try:
-                    if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres:
-                        a_exp1.append(0)
-                        a_exp2.append(0)
-                        continue
-                        
+                    # Calculating the Lyapunov exponents
+                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
+
+                    sort = np.sort(lya)
+                    a_exp1.append(sort[0]); a_exp2.append(sort[1])
+
                 except:
-                    a_exp1.append(0)
-                    a_exp2.append(0)
+                    a_exp1.append(0); a_exp2.append(0)
                     continue
-                        
-                # Calculating the Lyapunov exponents
-                lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
                 
-                sort = np.sort(lya)
-                a_exp1.append(sort[0])
-                a_exp2.append(sort[1])
-                
-            all_exp1.append(a_exp1)
-            all_exp2.append(a_exp2)
+            all_exp1.append(a_exp1); all_exp2.append(a_exp2)
     
         return all_exp1, all_exp2
     
