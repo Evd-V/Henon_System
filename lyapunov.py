@@ -42,7 +42,7 @@ def Gram_Schmidt_rev(vectors):
             
     return basis
 
-def Lyapunov(N, basis, xvalues):
+def Lyapunov(N, basis, xvalues, A, B):
     """ Function that calculates the Lyapunov exponents for the Henon map.
         For now this function only works for the Hénon map, still working on making it more general.
     
@@ -51,33 +51,39 @@ def Lyapunov(N, basis, xvalues):
                     basis   = the standard basis vectors in n dimensions. The syntax is for example: 
                               [e1, e2] where e1 = [[1], [0]] and e2 = [[0], [1]] (list);
                     xvalues = list of x values of the Hénon map;
+                    A       = value for parameter a for the Hénon map;
+                    B       = value for parameter b for the Hénon map;
                     
         Returns:    lya     = list containing the computed lyapunov exponents.
     """
     
-    dim = len(basis)                # Dimension
-    exponents = np.zeros(dim)       # Array to put the intermediate results in
+    dim = len(basis)                          # Dimension
+    exponents = [0 for i in range(dim)]       # Array to put the intermediate results in
     
     # First step
-    J = np.array([[-2.8*xvalues[0], 1], [0.3, 0]])          # The 'first' Jacobian
+    J = np.array([[-2*A*xvalues[0], 1], [B, 0]])            # The 'first' Jacobian
     v_1k = [np.matmul(J, b) for b in basis]                 # Calculating the 'first' v_nk
     u_nk = Gram_Schmidt([v_1k[i] for i in range(dim)])      # Calculating the 'first' u_nk
     
     # Adding to 'exponents', used for the calculating of the Lyapunov exponents
-    for i in range(dim): exponents[i] += np.log(norm_vect(u_nk[i]))
-    
-    u_nk = [u / norm_vect(u) for u in u_nk]                 # Normalizing
+    for i in range(dim):
+        u_i = u_nk[i]
+        norm_v = norm_vect(u_i)                             # Norm of the vector
+        exponents[i] += np.log(norm_v)                      # Adding the newly obtained value to the array 'exponents'
+        u_nk[i] = u_i / norm_v                              # Normalizing
     
     for n in range(1, N):
         
         v_nk = [np.matmul(J, u) for u in u_nk]              # Calculating v_nk
         u_nk = Gram_Schmidt([v_nk[i] for i in range(dim)])  # Gram-Schmidt
         
-        # Adding the newly obtained value to the array 'exponents'
-        for i in range(dim): exponents[i] += np.log(norm_vect(u_nk[i]))
+        for i in range(dim):
+            u_i = u_nk[i]
+            norm_v = norm_vect(u_i)                       # Norm of the vector
+            exponents[i] += np.log(norm_v)                # Adding the newly obtained value to the array 'exponents'
+            u_nk[i] = u_i / norm_v                        # Normalizing
         
-        J = np.array([[-2.8*xvalues[n], 1], [0.3, 0]])      # Updating the Jacobian matrix
-        u_nk = [u / norm_vect(u) for u in u_nk]             # Normalizing
+        J = np.array([[-2*A*xvalues[n], 1], [B, 0]])      # Updating the Jacobian matrix
         
     # Calculating the lyapunov exponents
     lya = [exponents[i] / N for i in range(dim)]
@@ -103,30 +109,32 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
         if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: return None
 
         # Calculating the Lyapunov exponents
-        lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
+        lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], A, B)
         
         return lya
         
     else:
+        basisVects = basis(len(start))                                  # Basis vectors
         all_exp1, all_exp2 = [], []
         for a in A:
-            a_exp1, a_exp2 = [], []
+            a_exp1 = []
+            a_exp2 = []
             for b in B:
-                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map    
-                basisVects = basis(len(start))                                  # Basis vectors
+                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map 
                 
-                try:
+                if Xvalues is not None:
                     # Calculating the Lyapunov exponents
-                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:])
+                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], a, b)
+                    a_exp1.append(min(lya))
+                    a_exp2.append(max(lya))
 
-                    sort = np.sort(lya)
-                    a_exp1.append(sort[0]); a_exp2.append(sort[1])
-
-                except:
-                    a_exp1.append(0); a_exp2.append(0)
+                else:
+                    a_exp1.append(None)
+                    a_exp2.append(None)
                     continue
                 
-            all_exp1.append(a_exp1); all_exp2.append(a_exp2)
+            all_exp1.append(a_exp1)
+            all_exp2.append(a_exp2)
     
         return all_exp1, all_exp2
     
