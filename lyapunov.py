@@ -92,6 +92,14 @@ def Lyapunov(N, basis, xvalues, A, B):
 
 def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     """ Calculation of the Lyapunov exponents specifically for the Hénon map.
+        If using arrays for A and B to for example create a Lyapunov grid, it can get 
+        really slow. Especially for a large number of different A and B values as it 
+        has to calculate Ninit points for the Hénon map and subsequently calculate the 
+        Lyapunov exponents. One can imagine that even for a 10x10 grid of A and B values 
+        this can quickly increase significantly in computation time. Therefore an option 
+        is to reduce Ninit which in turn decreases the accuracy of the Lyapunov 
+        exponents. However, for the creation of a Lyapunov grid these values do not 
+        have to be super exact but rather in the right ball park.
     
         Input:      Ninit   = number of iterations for the Hénon map (integer);
                     Cutoff  = number of points that get thrown away (integer);
@@ -102,7 +110,56 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
         Returns:    lya     = the Lyapunov exponents for the Hénon map (list).
     """
     
-    if type(A) == float and type(B) == float:
+    # First checking if A and B are arrays
+    if isinstance(A, np.ndarray) and isinstance(B, np.ndarray):
+        
+        basisVects = basis(len(start))                                  # Basis vectors
+        all_exp1, all_exp2 = [], []
+        
+        for a in A:
+            a_exp1, a_exp2 = [], []
+            
+            # Improvement in computing speed
+            exp1_add = a_exp1.append
+            exp2_add = a_exp2.append
+            
+            for b in B:
+                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map 
+                
+                if Xvalues is not None:
+                    # Calculating the Lyapunov exponents
+                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], a, b)
+                    exp1_add(min(lya))
+                    exp2_add(max(lya))
+
+                else:
+                    exp1_add(None)
+                    exp2_add(None)
+                    continue
+                
+            all_exp1.append(a_exp1)
+            all_exp2.append(a_exp2)
+    
+        return all_exp1, all_exp2
+        
+    # Checking if only A is an array
+    elif isinstance(A, np.ndarray) and (isinstance(B, float) or isinstance(B, int)):
+        all_exp1, all_exp2 = [], []
+        for a in A:
+            Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, B, div=div)
+            
+            # Still work in progress
+            
+    # Checking if only B is an array
+    elif isinstance(B, np.ndarray) and (isinstance(A, float) or isinstance(A, int)):
+        all_exp1, all_exp2 = [], []
+        for b in B:
+            Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, b, div=div)
+            
+            # Still work in progress
+    
+    # Checking if A and B are floats or integers
+    elif (isinstance(A, float) or isinstance(A, int)) and (isinstance(B, float) or isinstance(B, int)):
         Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points of the Hénon map    
         basisVects = basis(len(start))                                  # Basis vectors
 
@@ -112,31 +169,14 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
         lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], A, B)
         
         return lya
-        
-    else:
-        basisVects = basis(len(start))                                  # Basis vectors
-        all_exp1, all_exp2 = [], []
-        for a in A:
-            a_exp1 = []
-            a_exp2 = []
-            for b in B:
-                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map 
-                
-                if Xvalues is not None:
-                    # Calculating the Lyapunov exponents
-                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], a, b)
-                    a_exp1.append(min(lya))
-                    a_exp2.append(max(lya))
-
-                else:
-                    a_exp1.append(None)
-                    a_exp2.append(None)
-                    continue
-                
-            all_exp1.append(a_exp1)
-            all_exp2.append(a_exp2)
     
-        return all_exp1, all_exp2
+    # Invalid input for A and/or B
+    else:
+        raise ValueError('invalid input for A and/or B parameter')
+    
+    # Invalid input for A and/or B
+    else:
+        raise ValueError('invalid input for A and/or B parameter')
     
 def create_lya_grid(a_vals, b_vals, start=(0,0), N=int(1e4), cutoff=int(1e3), div=True):
     """ Function that calculates the grid for a given arrays of a and b values. """
