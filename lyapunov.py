@@ -174,11 +174,38 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     else:
         raise ValueError('invalid input for A and/or B parameter')
     
-    # Invalid input for A and/or B
-    else:
-        raise ValueError('invalid input for A and/or B parameter')
-    
 def create_lya_grid(a_vals, b_vals, start=(0,0), N=int(1e4), cutoff=int(1e3), div=True):
     """ Function that calculates the grid for a given arrays of a and b values. """
     vals = np.array(calc_lya_henon(N, cutoff, start, a_vals, b_vals, div=div))
     return vals[0], vals[1]
+
+def det_att(lya1, lya2, acc=0.1):
+    """ Function that finds the type of attractor for two given Lyapunov exponents; 
+        it is assumed that lya1 >= lya2. For some type of attractor it is required to 
+        see if either one of the two exponents are zero or that the exponents are equal 
+        to each other. Since the accuracy of the exponents is limited there has to be 
+        some threshold at which it is determined that an exponent is zero or that both 
+        are equal to each other. The input parameter acc represents this accuracy; the 
+        default value is 0.1 which is relatively high. The function returns an integer 
+        between 0 and 5 which represent which type of attractor it is.
+        
+        Input:      lya1 = first Lyapunov exponent (float);
+                    lya2 = second Lyapunov exponent (float);
+                    acc = accuracy (float);
+                    
+        Returns:    type of attractor (integer).
+    """
+    
+    if lya1 is None: return 5                     # No attractor
+    
+    # 6 possibilities, see Garst, S., & Sterk, A. E. (2018)
+    elif lya1 < 0-acc:
+        if lya1 > lya2+acc: return 0              # 0 > lya1 > lya2, Point attractor
+        else: return 1                            # 0 > lya1 = lya2, Point attractor
+        
+    elif lya1 > -acc and lya1 < acc: return 2     # 0 = lya1 > lya2, Invariant circle
+    elif lya1 > 0:
+        if lya2 < acc: return 3                   # lya1 > 0 >= lya2, Chaotic attractor
+        else: return 4                            # lya1 >= lya2 > 0, Chaotic attractor
+        
+    else: return 5                                # No attractor
