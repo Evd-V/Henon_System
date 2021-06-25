@@ -91,13 +91,13 @@ def write_data(fname, data, xsize=20, acc=3, delimiter='|', a=None, b=None, info
         f.write("\n")
         
         # Writing the data
-        for i in range(0, len(data)-1, xsize):
+        for i in range(0, len(data), xsize):
             for j in data[i:i+xsize]:
                 if j == None:
                     conv_none = conv_none_type(9, acc)
                     f.write(f" {conv_none} {delimiter}")
                     continue
-                if j < 0:
+                elif j < 0:
                     f.write(f"{j:.{acc}f} {delimiter}")
                 else:
                     f.write(f" {j:.{acc}f} {delimiter}")
