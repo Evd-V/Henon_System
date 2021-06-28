@@ -1,5 +1,7 @@
 import numpy as np
+
 from Full_Attractor import Henon
+from general import check_limit, determine_point
 
 def norm_vect(vector):
     """ Calculate the norm of a vector. """
@@ -24,7 +26,7 @@ def basis(dim):
     
     return basisVects
     
-def Gram_Schmidt_rev(vectors):
+def Gram_Schmidt(vectors):
     """ Function that uses the Gram-Schmidt process to orthogonalize a set of n-dimensional 
         vectors. The normalization of the vectors is not included.
         
@@ -90,6 +92,35 @@ def Lyapunov(N, basis, xvalues, A, B):
     
     return lya
 
+def lyapunov_point(xp, av, bv):
+    """ Function that calculates the Lyapunov exponents for a point attractor of the Hénon 
+        map. For point attractors it can be shown that the Lyapunov numbers are equal to 
+        the eigenvalues of the Jacobian matrix at the attracting point. The Lyapunov exponents 
+        can then be calculated by taking the natural logarithm of the Lyapunov numbers. This 
+        calculation is a lot quicker than the general way of calculating Lyapunov exponents. 
+        In this function the eigenvalues are found by solving the characteristic equation.
+        
+        Input:      xp = x coordinate of attracting point (float);
+                    av = a value of the Hénon map (float);
+                    bv = b value of the Hénon map (float);
+                    
+        Returns:    sorted list containing both Lyapunov exponents (list).
+    """
+    
+    # Solving the characteristic equation of the Jacobian matrix at the point
+    mult = av * xp
+    sqrt = np.sqrt(mult*mult + bv)
+    
+    # The solutions
+    sol1 = -mult + sqrt
+    sol2 = -mult - sqrt
+    
+    # Finding the Lyapunov exponents
+    lya1 = np.log(abs(sol1))
+    lya2 = np.log(abs(sol2))
+    
+    return [lya1, lya2]
+
 def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     """ Calculation of the Lyapunov exponents specifically for the Hénon map.
         If using arrays for A and B to for example create a Lyapunov grid, it can get 
@@ -113,9 +144,10 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     # First checking if A and B are arrays
     if isinstance(A, np.ndarray) and isinstance(B, np.ndarray):
         
-        basisVects = basis(len(start))                                  # Basis vectors
-        all_exp1, all_exp2 = [], []
+        basisVects = basis(len(start))          # Basis vectors
+        all_exp1, all_exp2 = [], []             # List to put exponents in
         
+        # Looping over all values of the 'a' parameter
         for a in A:
             a_exp1, a_exp2 = [], []
             
@@ -123,11 +155,24 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
             exp1_add = a_exp1.append
             exp2_add = a_exp2.append
             
+            # Looping over all values of the 'b' parameter
             for b in B:
-                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)       # Generating the points of the Hénon map 
                 
-                if Xvalues is not None:
-                    # Calculating the Lyapunov exponents
+                # Generating the points of the Hénon map
+                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)
+                
+                # First checking if the Hénon map diverges
+                if Xvalues != None:
+                    
+                    # Checking if we have a point attractor
+                    point_attr = determine_point(xvalues, yvalues)
+                    if point_attr != None:
+                        
+                        # If we have a point attractor we can calculate the exponents quickly
+                        exp1_add(lyapunov_point(point_attr[0], A, B)[0])
+                        exp2_add(lyapunov_point(point_attr[0], A, B)[1])
+                    
+                    # Calculating the Lyapunov exponents for all other cases
                     lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], a, b)
                     exp1_add(min(lya))
                     exp2_add(max(lya))
@@ -160,15 +205,29 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     
     # Checking if A and B are floats or integers
     elif (isinstance(A, float) or isinstance(A, int)) and (isinstance(B, float) or isinstance(B, int)):
-        Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, B)       # Generating the points of the Hénon map    
-        basisVects = basis(len(start))                                  # Basis vectors
-
-        if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: return None
-
-        # Calculating the Lyapunov exponents
-        lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], A, B)
         
-        return lya
+        # Generating the points of the Hénon map
+        xvalues, yvalues = Henon(start[0], start[1], Ninit, A, B)
+        
+        # Basis vectors
+        basisVects = basis(len(start))
+
+        # Checking if the values diverge
+        if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: return None
+        
+        # Checking if we have a point attractor
+        point_attr = determine_point(xvalues, yvalues)
+        elif point_attr != None:
+            
+            # If we have a point attractor we can calculate the exponents quickly
+            return lyapunov_point(point_attr[0], A, B)
+
+        # For all other cases
+        else:
+            # Calculating the Lyapunov exponents
+            lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], A, B)
+
+            return lya
     
     # Invalid input for A and/or B
     else:
