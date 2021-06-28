@@ -1,6 +1,6 @@
 import numpy as np
 
-from Full_Attractor import Henon
+from full_attractor import Henon
 from general import check_limit, determine_point
 
 def norm_vect(vector):
