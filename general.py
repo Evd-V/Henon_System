@@ -40,16 +40,15 @@ def determine_point(xv, yv, acc=1e-10):
     
     # Constants
     L = len(xv)             # Number of points in the lists
-    step = int(L/10)        # Step size that will be used
+    step = int(L/11)        # Step size that will be used
     count = 0               # Number of times the point has been found in the list
     
     # The last point of the list
     point = (xv[-1], yv[-1])
     
-    for i in range(step, L, step):
+    for i in range(step, L, step+1):
         # Checking if the current point is equal to the last point of the list
         if check_limit((xv[i], yv[i]), point[0], point[1], acc=acc):
-            
             # Point found
             count += 1
             
