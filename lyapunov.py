@@ -211,12 +211,14 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
         
         # Basis vectors
         basisVects = basis(len(start))
+        
+        # Determining if we have a point attractor
+        point_attr = determine_point(xvalues, yvalues)
 
         # Checking if the values diverge
         if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: return None
         
         # Checking if we have a point attractor
-        point_attr = determine_point(xvalues, yvalues)
         elif point_attr != None:
             
             # If we have a point attractor we can calculate the exponents quickly

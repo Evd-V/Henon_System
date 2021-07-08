@@ -63,7 +63,7 @@ def image_func(vertices):
     
     return bounds
   
-  def plot_n_img(init_vert, n_start=0, n_end=8, output=False, plot=True, ax=None, color='indigo'):
+def plot_n_img(init_vert, n_start=0, n_end=8, output=False, plot=True, ax=None, color='indigo'):
     """ Function that creates the image of a geometrical shape using the Hénon map. The initial 
         vertices of the geometric shape are given by the input parameter 'init_vert'. This function 
         is able to generate multiple images based on the initial input. This implies that the 

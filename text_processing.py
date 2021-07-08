@@ -85,7 +85,7 @@ def write_data(fname, data, xsize=20, acc=3, delimiter='|', a=None, b=None, info
         
         # Writing the header of each table
         if a != None and b != None:
-            f.write(f"TABLE #{no_tables + 1}, {a[0]} < a < {a[1]}, {b[0]} < b < {b[1]} \n")
+            f.write(f"TABLE #{no_tables + 1}, {a[0]} < a < {a[1]} , {b[0]} < b < {b[1]} \n")
         else:
             f.write(f"TABLE #{no_tables + 1}\n")
         f.write("\n")
@@ -105,7 +105,7 @@ def write_data(fname, data, xsize=20, acc=3, delimiter='|', a=None, b=None, info
                                 
 # Escape sequence signs which can be ignored
 # See for example: https://www.python-ds.com/python-3-escape-sequences
-escape_seq = [" ", "\n", "\t", "\a", "\b", "\f", "\r", "\v"]
+escape_seq = [" ", "\n", "\t", "\a", "\b", "\f", "\r", "\v", ","]
 
 # List of mathematical characters which can often be ignored
 math_char = ["<", ">", "-", "+", "/", "*", "^", "**", "=", "<=", ">="]
