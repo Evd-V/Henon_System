@@ -7,7 +7,7 @@ from full_attractor import Henon
 Xvalues, Yvalues = Henon(X0, Y0, It, Av, Bv)
 
 def cut_interval(X_Lim, Y_Lim, X_Points, Y_Points):
-        """ Function that selects the points of a set of points - for example the Hénon attractor - that 
+    """ Function that selects the points of a set of points - for example the Hénon attractor - that 
         lie inside a specific interval. The reason this is useful is that when you are 'zooming' in 
         on a specific part of the attractor and select a certain x and y limits, matplotlib still 
         'generates'/'plots' all off the points including the ones outside the frame which are not 
