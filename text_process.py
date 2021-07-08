@@ -102,3 +102,124 @@ def write_data(fname, data, xsize=20, acc=3, delimiter='|', a=None, b=None, info
                 else:
                     f.write(f" {j:.{acc}f} {delimiter}")
             f.write("\n")
+                                
+# Escape sequence signs which can be ignored
+# See for example: https://www.python-ds.com/python-3-escape-sequences
+escape_seq = [" ", "\n", "\t", "\a", "\b", "\f", "\r", "\v"]
+
+# List of mathematical characters which can often be ignored
+math_char = ["<", ">", "-", "+", "/", "*", "^", "**", "=", "<=", ">="]
+
+def eval_text(string):
+    """ Function that evaluates a string expression. This function is especially useful 
+        to find the headers of files creating using the 'write_data' function defined 
+        above. The output is a list with dictionaries.
+        
+        Input:      string = string that will be analysed (string);
+        
+        Returns:    dicts  = list containing the data in dictionaries (list).
+    """
+    
+    # Splitting by spaces
+    red_string = string.split(" ")
+    
+    # List to put data in
+    vals = []
+    misc = []
+    
+    # Looping over all splitted strings
+    for char in red_string:
+        # Checking if word or character can be ignored
+        if char == "TABLE:" or char in (math_char or escape_seq): continue
+        
+        # All other cases
+        else:
+            if char == 'a' or char == 'b':
+                misc.append(char)
+            else:
+                try:
+                    vals.append(eval(char))
+                except:
+                    continue
+                
+    # List to put dictionaries in   
+    dicts = []
+    
+    # Creating the dictionaries
+    for ind, c in enumerate(misc):
+        try:
+            dicts.append({c: [vals[2*ind], vals[2*ind+1]]})
+        except:
+            raise Exception("Invalid header input")
+        
+    return dicts
+
+def read_data(fname, comment="#", delimiter="|"):
+    """ Function that reads data from a given file. This function works best combined 
+        with the files that are written using the 'write_data' function defined above. 
+        The input parameter 'comment' gives the character which determines the 
+        commented lines that can be ignored. The 'delimiter' paramter gives the character 
+        which separates two different values in a table.
+        
+        Input:      fname     = name of the file that will be read (string);
+                    comment   = character that gives which lines are commented (string);
+                    delimiter = character that gives how two values are separated (string);
+                    
+        Returns:    all_data  = the data that is obtained after reading the table (list).       
+    """
+    
+    # Reading the file
+    with open(fname, "r") as f:
+        
+        # Reading the lines
+        lines = f.readlines()
+        
+        # Lists to put the data in
+        current_data = []
+        all_data = []
+        
+        # List to put the headers in
+        headers = []
+        
+        # Looping over all lines
+        for ind, line in enumerate(lines):
+            
+            # Checking if we are dealing with a new table
+            if ("TABLE" in line) or (ind == len(lines)-1):
+                
+                # Adding the header data to the 'headers' list
+                if ind != len(lines)-1:
+                    headers.append(eval_text(line))
+                
+                # First checking if the 'current_data' list contains anything
+                if len(current_data) == 0: continue
+                
+                # Adding the data of the previous table to 'all_data' and resetting the 'current_data' list
+                all_data.append(current_data)
+                current_data = []
+                
+            # Checking if line is commented
+            elif comment in line:
+                continue
+                
+            else:
+                # Splitting the lines according to the delimiter
+                data = line.split(delimiter)
+                
+                # List to put the data of each line in
+                red_data = []
+                
+                # Looping over the characters in the line
+                for i in data:
+                    if i in escape_seq: continue
+                    else:
+                        try:
+                            red_data.append(eval(i))
+                        except:
+                            red_data.append(conv_none_type(9, 4))
+                            
+                # Checking if there is any data that has to be added
+                if len(red_data) != 0:
+                    current_data.append(red_data)
+                
+        return all_data, headers
