@@ -26,7 +26,7 @@ def Create_Line(point1, point2, size=1000):
     
     # Finding the x and y values
     xvals = np.linspace(min(X1, X2), max(X1, X2), size)
-    yvals = Coeff * Xvals + b
+    yvals = coeff * xvals + b
     
     return xvals, yvals
 
@@ -47,33 +47,36 @@ def Transformation(Xvalues, Yvalues, a, b):
             
     return new_xvals, new_yvals
 
-def image_func(vertices):
-    """ Function that finds the image for given vertices. The input is a list containing 
-        both the x and y values of all the input vertices. So an example of a correct 
-        input is: [[x1, y1], [x2, y2]] where the numbers 1 and 2 represent two different 
-        set of points that represent the vertices. The output bounds has the same 
+def image_func(vertices, av, bv):
+    """ Function that finds the image for given vertices. The input is a list containing
+        both the x and y values of all the input vertices. So an example of a correct
+        input is: [[x1, y1], [x2, y2]] where the numbers 1 and 2 represent two different
+        set of points that represent the vertices. The output bounds has the same
         structure.
-        
+
         Input:      vertices = list containing the different vertices (list);
-        
+                    av       = a parameter of the Hénon map (float);
+                    bv       = b parameter of the Hénon map (float);
+
         Returns:    bounds   = list containing the image of the vertices (list).
     """
-    
-    bounds = [Transformation(v[0], v[1], Av, Bv) for v in vertices]
-    
+
+    bounds = [Transformation(v[0], v[1], av, bv) for v in vertices]
+
     return bounds
-  
-def plot_n_img(init_vert, n_start=0, n_end=8, output=False, plot=True, ax=None, color='indigo'):
-    """ Function that creates the image of a geometrical shape using the Hénon map. The initial 
-        vertices of the geometric shape are given by the input parameter 'init_vert'. This function 
-        is able to generate multiple images based on the initial input. This implies that the 
-        Hénon map will be applied multiple times to the initial conditions based on the input. 
-        'n_start' gives the lowest order image. So n_start=0 is the image obtained after the map 
-        has acted on it once; 'n_end' gives the highest order image. It is possible to select which 
-        output is desirable, either a list containing all images or a plot showing the images or 
-        both. 'ax' gives the name of the axis of the plot, depends on the plot. If the plot output 
+
+def plot_n_img(init_vert, n_start=0, n_end=8, output=False, plot=True, ax=None, color=['indigo'],
+               lw=[1], av1=1.4, bv1=0.3):
+    """ Function that creates the image of a geometrical shape using the Hénon map. The initial
+        vertices of the geometric shape are given by the input parameter 'init_vert'. This function
+        is able to generate multiple images based on the initial input. This implies that the
+        Hénon map will be applied multiple times to the initial conditions based on the input.
+        'n_start' gives the lowest order image. So n_start=0 is the image obtained after the map
+        has acted on it once; 'n_end' gives the highest order image. It is possible to select which
+        output is desirable, either a list containing all images or a plot showing the images or
+        both. 'ax' gives the name of the axis of the plot, depends on the plot. If the plot output
         is selected then it is of course required that the rest of the plot is set up correctly.
-        
+
         Input:      init_vert = initial vertices of the geometrical shapes (list);
                     n_start   = lowest order image (integer);
                     n_end     = highest order image (integer);
@@ -81,36 +84,40 @@ def plot_n_img(init_vert, n_start=0, n_end=8, output=False, plot=True, ax=None, 
                     plot      = whether or not a plot has to be made (Boolean);
                     ax        = axis name of the plot (matplotlib.axes._subplots.AxesSubplot);
                     color     = color of the image;
-                    
+                    av1       = a parameter of the Hénon map (float);
+                    bv1       = b parameter of the Hénon map (float);
+
         Returns:    optional: all_bounds = list containing the images (list).
     """
-    
+
     # Starting values
     j = 0
     vert = init_vert
-    
+    count = 0
+
     # Empty list to put the boundaries in
     if output: all_bounds = []
-    
+
     # Looping
     while j <= n_end:
-        bounds = image_func(vert)
-        
+        bounds = image_func(vert, av1, bv1)
+
         # Checking if the values need to be added to the boundaries
         if j >= n_start and j <= n_end:
             if output: all_bounds.append(bounds)
-            
+
             # Checking if the bounds have to be plotted
             if plot:
                 for ind, b in enumerate(bounds):
                     if ind == 0:
-                        ax.plot(b[0], b[1], label=f'Boundary {j}', color=color)
+                        ax.plot(b[0], b[1], label=f'Boundary {j}', color=color[count], lw=lw[count])
                     else:
-                        ax.plot(b[0], b[1], color=color)
-        
+                        ax.plot(b[0], b[1], color=color[count], lw=lw[count])
+            count += 1
+
         # New conditions for the next loop
         vert = bounds
         j += 1
-        
+
     if output:
         return all_bounds
