@@ -8,7 +8,7 @@ from full_attractor import Henon
 X0 = Y0 = 0
 It = int(1e5)
 Av = 1.4
-Bv = 1.3
+Bv = 0.3
 
 # Calculating the points of the Hénon attractor
 Xvalues, Yvalues = Henon(X0, Y0, It, Av, Bv)
