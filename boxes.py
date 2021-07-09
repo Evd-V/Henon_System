@@ -1,4 +1,5 @@
 import numpy as np
+from math import ceil
 from matplotlib.pyplot import figure, show, vlines, hlines, savefig
 
 from full_attractor import Henon
