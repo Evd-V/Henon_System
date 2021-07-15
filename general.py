@@ -40,16 +40,15 @@ def determine_point(xv, yv, acc=1e-10):
     
     # Constants
     L = len(xv)             # Number of points in the lists
-    step = int(L/10)        # Step size that will be used
+    step = int(L/11)        # Step size that will be used
     count = 0               # Number of times the point has been found in the list
     
     # The last point of the list
     point = (xv[-1], yv[-1])
     
-    for i in range(step, L, step):
+    for i in range(step, L, step+1):
         # Checking if the current point is equal to the last point of the list
         if check_limit((xv[i], yv[i]), point[0], point[1], acc=acc):
-            
             # Point found
             count += 1
             
@@ -57,6 +56,59 @@ def determine_point(xv, yv, acc=1e-10):
             if count > 2:
                 return point            # Point attractor
                     
+    return None
+
+
+def determine_period(xvals, yvals, acc=1e-8):
+    """ Function that determines whether or not x and y values is periodic; if the 
+        values are periodic, the period is returned as well as the values that make 
+        up the period. If no period is detected None is returned. The way this 
+        function determines whether or not a list is periodic, is by looping over a 
+        part of the values. The loop is started at the second to last point, and 
+        moves towards previous points. For each point it is checked whether or not 
+        the x and y values correspond to the last point in the list; if this is the 
+        case we have detected that the list is most likely periodic. This is might 
+        not always be the case as some point might be very close to the end point 
+        while the list is still not periodic. To deal with this it is possible to 
+        adjust the 'acc' parameter which determines how close the point should be to 
+        the end point for it to 'count' as the same point. To increase the speed, a 
+        only the last 10% of the list will be checked for periodicty; therefore this 
+        works best for relatively large lists.
+        
+        Input:      xvals  = list containing the x values that will be checked (list);
+                    yvals  = list containing the y values that will be checked (list);
+                    acc    = accuracy of how close the points should be to count (float);
+                    
+        Returns:    period = the detected period (integer);
+                    list containing the x values that make up the period (list);
+                    list containing the y values that make up the period (list);
+                
+                OR: None
+    """
+    # Checking if the x and y lists have the same length
+    if len(xvals) != len(yvals):
+        raise Exception("xvals and yvals must have the same length")
+    
+    # Finding the length and maximum period of the list
+    L = len(xvals)
+    max_period = int(L/10)
+    
+    # Determining the end point
+    end_point = (xvals[-1], yvals[-1])
+    
+    # The current period
+    period = 1
+    
+    # Looping over the values in the list, going from last entries to first
+    for i in range(L-2, L-max_period, -1):
+        
+        # Checking if the end point occured earlier in the list
+        if check_limit(end_point, xvals[i], yvals[i], acc=acc):
+            return period, xvals[i:-1], yvals[i:-1]
+        
+        # Period increases with 1
+        period += 1
+    
     return None
 
 def line_height(value, lower_Val, diff):
