@@ -2,7 +2,6 @@ import numpy as np
 
 import general as ge
 from full_attractor import Henon
-from general import check_limit
 
 def norm_vect(vector):
     """ Calculate the norm of a vector. """
