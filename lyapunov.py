@@ -1,7 +1,7 @@
 import numpy as np
 
+import general as ge
 from full_attractor import Henon
-from general import check_limit, determine_point
 
 def norm_vect(vector):
     """ Calculate the norm of a vector. """
@@ -107,19 +107,40 @@ def lyapunov_point(xp, av, bv):
         Returns:    sorted list containing both Lyapunov exponents (list).
     """
     
-    # Solving the characteristic equation of the Jacobian matrix at the point
-    mult = av * xp
-    sqrt = np.sqrt(mult*mult + bv)
-    
-    # The solutions
-    sol1 = -mult + sqrt
-    sol2 = -mult - sqrt
+    # Finding the eigenvalues at the given point
+    sol1, sol2 = ge.solve_eig_vals(xp, av, bv)
     
     # Finding the Lyapunov exponents
     lya1 = np.log(abs(sol1))
     lya2 = np.log(abs(sol2))
     
-    return [lya1, lya2]
+    return [max(lya1, lya2), min(lya1, lya2)]
+
+def lyapunov_period(xpoints, av, bv):
+    """ Function that finds the Lyapunonv exponents of a periodic set of points for the Hénon 
+        map. This is done by first taking finding the eigenvalues at each periodic point using 
+        the same method as for a point attractor. Subsequently all these exponents are taken 
+        together and the average of these is found.
+        
+        Input:      xpoints = the x coordinates that are periodic (list);
+                    av   = the a parameter of the Hénon map (float);
+                    bv   = the b parameter of the Hénon map (float);
+                    
+        Returns:    list containing the maximum and minimum Lyapunov exponents respectively (list).
+    """
+    # Creating empty lists to put the exponents in
+    lya1, lya2 = [], []
+    
+    # Looping over all periodic points
+    for x in xpoints:
+        # Finding the exponents for each point
+        lya_max, lya_min = lyapunov_point(x, av, bv)
+        
+        # Adding the exponents to the lists
+        lya1.append(lya_max)
+        lya2.append(lya_min)
+        
+    return [max(np.mean(lya1), np.mean(lya2)), min(np.mean(lya1), np.mean(lya2))]
 
 def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     """ Calculation of the Lyapunov exponents specifically for the Hénon map.
@@ -159,28 +180,37 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
             for b in B:
                 
                 # Generating the points of the Hénon map
-                Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)
+                xvalues, yvalues = Henon(start[0], start[1], Ninit, a, b, div=div)
                 
                 # First checking if the Hénon map diverges
-                if Xvalues != None:
-                    
-                    # Checking if we have a point attractor
-                    point_attr = determine_point(xvalues, yvalues)
-                    if point_attr != None:
-                        
-                        # If we have a point attractor we can calculate the exponents quickly
-                        exp1_add(lyapunov_point(point_attr[0], A, B)[0])
-                        exp2_add(lyapunov_point(point_attr[0], A, B)[1])
-                    
-                    # Calculating the Lyapunov exponents for all other cases
-                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], a, b)
-                    exp1_add(min(lya))
-                    exp2_add(max(lya))
-
-                else:
+                if xvalues == None:
                     exp1_add(None)
                     exp2_add(None)
                     continue
+                    
+                else:
+                    # Checking if we have a point attractor or a limit cycle
+                    point_attr = ge.determine_point(xvalues, yvalues)
+                    lim_cycle = ge.determine_period(xvalues, yvalues)
+                    
+                    # If we have a point attractor or limit cycle we can calculate the exponents quickly
+                    if point_attr != None:
+                        exp1_add(lyapunov_point(point_attr[0], a, b)[0])
+                        exp2_add(lyapunov_point(point_attr[0], a, b)[1])
+                        
+                    elif lim_cycle != None:
+                        exp1_add(lyapunov_period(lim_cycle[1], a, b)[0])
+                        exp2_add(lyapunov_period(lim_cycle[1], a, b)[1])
+                    
+                    else:
+                        # Calculating the Lyapunov exponents for all other cases
+                        lya = Lyapunov(Ninit-cutoff, np.array(basisVects), xvalues[cutoff:], a, b)
+                        if lya[0] != None:
+                            exp1_add(max(lya))
+                            exp2_add(min(lya))
+                        else:
+                            exp1_add(None)
+                            exp2_add(None)
                 
             all_exp1.append(a_exp1)
             all_exp2.append(a_exp2)
@@ -190,44 +220,121 @@ def calc_lya_henon(Ninit, cutoff, start, A, B, div=True, thres=1e5):
     # Checking if only A is an array
     elif isinstance(A, np.ndarray) and (isinstance(B, float) or isinstance(B, int)):
         all_exp1, all_exp2 = [], []
+        
+        # Improvement in computing speed
+        exp1_add = all_exp1.append
+        exp2_add = all_exp2.append
+        
+        # Looping over all values of the 'a' parameter
         for a in A:
-            Xvalues, Yvalues = Henon(start[0], start[1], Ninit, a, B, div=div)
+            # Calculating the points of the Hénon map
+            xvalues, yvalues = Henon(start[0], start[1], Ninit, a, B, div=div)
             
-            # Still work in progress
+            # Checking if the points diverge
+            if xvalues == None:
+                exp1_add(None)
+                exp2_add(None)
+                continue
+            
+            else:
+                # Checking if we have a point attractor or a limit cycle
+                point_attr = ge.determine_point(xvalues, yvalues)
+                lim_cycle = ge.determine_period(xvalues, yvalues)
+                
+                # If we have a point attractor or limit cycle we can calculate the exponents quickly
+                if point_attr != None:
+                    exp1_add(lyapunov_point(point_attr[0], a, B)[0])
+                    exp2_add(lyapunov_point(point_attr[0], a, B)[1])
+                    
+                elif lim_cycle != None:
+                    exp1_add(lyapunov_period(lim_cycle[1], a, B)[0])
+                    exp2_add(lyapunov_period(lim_cycle[1], a, B)[1])
+                    
+                else:
+                    # Calculating the Lyapunov exponents for all other cases
+                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), xvalues[cutoff:], a, B)
+                    if lya[0] != None:
+                        exp1_add(max(lya))
+                        exp2_add(min(lya))
+                    else:
+                        exp1_add(None)
+                        exp2_add(None)
+            
+        return all_exp1, all_exp2
             
     # Checking if only B is an array
     elif isinstance(B, np.ndarray) and (isinstance(A, float) or isinstance(A, int)):
         all_exp1, all_exp2 = [], []
+        
+        # Improvement in computing speed
+        exp1_add = all_exp1.append
+        exp2_add = all_exp2.append
+        
+        # Looping over all values of the 'b' parameter
         for b in B:
-            Xvalues, Yvalues = Henon(start[0], start[1], Ninit, A, b, div=div)
+            # Calculating the points of the Hénon map
+            xvalues, yvalues = Henon(start[0], start[1], Ninit, A, b, div=div)
             
-            # Still work in progress
+            # Checking if the points diverge
+            if xvalues == None:
+                exp1_add(None)
+                exp2_add(None)
+                continue
+            
+            else:
+                # Checking if we have a point attractor or a limit cycle
+                point_attr = ge.determine_point(xvalues, yvalues)
+                lim_cycle = ge.determine_period(xvalues, yvalues)
+                
+                # If we have a point attractor or limit cycle we can calculate the exponents quickly
+                if point_attr != None:
+                    exp1_add(lyapunov_point(point_attr[0], A, b)[0])
+                    exp2_add(lyapunov_point(point_attr[0], A, b)[1])
+                    
+                elif lim_cycle != None:
+                    exp1_add(lyapunov_period(lim_cycle[1], A, b)[0])
+                    exp2_add(lyapunov_period(lim_cycle[1], A, b)[1])
+                    
+                else:
+                    # Calculating the Lyapunov exponents for all other cases
+                    lya = Lyapunov(Ninit-cutoff, np.array(basisVects), xvalues[cutoff:], A, b)
+                    if lya[0] != None:
+                        exp1_add(max(lya))
+                        exp2_add(min(lya))
+                    else:
+                        exp1_add(None)
+                        exp2_add(None)
+            
+        return all_exp1, all_exp2
     
     # Checking if A and B are floats or integers
     elif (isinstance(A, float) or isinstance(A, int)) and (isinstance(B, float) or isinstance(B, int)):
         
         # Generating the points of the Hénon map
-        xvalues, yvalues = Henon(start[0], start[1], Ninit, A, B)
+        xvalues, yvalues = Henon(start[0], start[1], Ninit, A, B, div=div)
         
         # Basis vectors
         basisVects = basis(len(start))
         
-        # Determining if we have a point attractor
-        point_attr = determine_point(xvalues, yvalues)
-
-        # Checking if the values diverge
-        if abs(Xvalues[cutoff]) == np.inf or abs(Xvalues[cutoff]) > thres: return None
+        # Checking if we have a point attractor or limit cycle
+        point_attr = ge.determine_point(xvalues, yvalues)
+        lim_cycle = ge.determine_period(xvalues, yvalues)
         
-        # Checking if we have a point attractor
+        # Checking if the values diverge
+        if xvalues == None:
+            return None
+        
+         # If we have a point attractor or limit cycle we can calculate the exponents quickly
         elif point_attr != None:
-            
-            # If we have a point attractor we can calculate the exponents quickly
             return lyapunov_point(point_attr[0], A, B)
+        
+        elif lim_cycle != None:
+            return lyapunov_period(lim_cycle[1], A, B)
 
         # For all other cases
         else:
             # Calculating the Lyapunov exponents
-            lya = Lyapunov(Ninit-cutoff, np.array(basisVects), Xvalues[cutoff:], A, B)
+            lya = Lyapunov(Ninit-cutoff, np.array(basisVects), xvalues[cutoff:], A, B)
 
             return lya
     

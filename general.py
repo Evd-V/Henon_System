@@ -1,4 +1,5 @@
 import numpy as np
+from cmath import sqrt
 
 def check_limit(point, xp, yp, acc=1e-5):
     """ Function that checks whether or not a point is within a certain range of an
@@ -58,7 +59,6 @@ def determine_point(xv, yv, acc=1e-10):
                     
     return None
 
-
 def determine_period(xvals, yvals, acc=1e-8):
     """ Function that determines whether or not x and y values is periodic; if the 
         values are periodic, the period is returned as well as the values that make 
@@ -110,6 +110,28 @@ def determine_period(xvals, yvals, acc=1e-8):
         period += 1
     
     return None
+
+def solve_eig_vals(xp, av, bv):
+    """ Function that finds the eigenvalues of the Jacobian matrix of the Hénon map by solving the 
+        characteristic equation. Imaginary solutions are not included and only the real part is used. 
+        
+        Input:      xp   = the x coordinate at which the eigenvalues have to be found (float);
+                    av   = the a parameter of the Hénon map (float);
+                    bv   = the b parameter of the Hénon map (float);
+                    
+        Returns:    sol1 = the first and largest eigenvalue at the given point (float);
+                    sol2 = the second and smallest eigenvalue at the given point (float).
+    """
+    
+    # Solving the characteristic equation of the Jacobian matrix at the point
+    mult = av * xp
+    sqrt_val = sqrt(mult*mult + bv).real
+    
+    # The solutions
+    sol1 = -mult + sqrt_val
+    sol2 = -mult - sqrt_val
+    
+    return sol1, sol2
 
 def line_height(value, lower_Val, diff):
     """ Function that calculates the hight, on a scale from 0 to 1, for a vertical or horizontal 
