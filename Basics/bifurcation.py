@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib.pyplot import figure, show, cm
-import argparse
 
 import full_henon as fh
 import helper as he
@@ -15,6 +14,17 @@ def henon_bifurc(start, end, iterations, accuracy=1000, cut=950, bvalue=0.3):
         by accuracy - cut. Finally the number of x points is defined, which has 
         the same length as the number of y points and ranges from the minimum to 
         the maximum value of the parameter a. This can be used for plotting.
+        
+        Input:  start      = lower boundary for "a" parameter value (float);
+                end        = upper boundary for "a" parameter value (float);
+                iterations = number of distinct "a" parameter values (int);
+                accuracy   = number of times the Hénon map is iterated (int);
+                cut        = iterated points thrown away (int);
+                bvalue     = value of the "b" parameter (float);
+                
+        Returns: apoints   = used "a" parameters (array);
+                 xpoints   = "a" parameter values for plotting (array);
+                 ypoints   = calculated x points of Hénon map (array).
     """
     
     # Generating the 'a' parameter points
@@ -138,91 +148,4 @@ def plot_bifurc(fname, threshold, xSize, ySize, xLim, yLim, saveFig=None):
     frame.tick_params(axis="both", labelsize=15)
     
     if saveFig: fig.savefig(saveFig)
-    else: show()
-
-
-
-def plot_bifurc_grid(aSize, xSize, aLim, xLim, acc=1000, bV=0.3, saveFig=None):
-    """ OLD
-        Plotting the bifurcation diagram of the Hénon map. 
-    """
-    
-    nTicks = 5                                      # Number of ticks on axes
-    aTicks = np.round(np.linspace(aLim[0], aLim[1], nTicks), 1)  # a tick values
-    xTicks = np.round(np.linspace(xLim[0], xLim[1], nTicks), 1)  # x tick values
-    
-    aLocs = np.linspace(0, aSize, nTicks)           # a tick locations
-    xLocs = np.linspace(0, xSize, nTicks)           # x tick locations
-    
-    grid = bifurc_grid(aSize, xSize, aLim, xLim, acc=acc, bV=bV)
-    
-    # Finding max and dividing each column by the max value of that column
-    redGrid = grid / np.max(grid, axis=0)
-    
-    # Plotting
-    fig = figure(figsize=(15,8))
-    frame = fig.add_subplot(1,1,1)
-    
-    frame.imshow(redGrid[-1::-1], cmap=cm.binary)
-    
-    # Setting axes
-    frame.set_xlabel("$a$", fontsize=20)
-    frame.set_ylabel("$x$", fontsize=20)
-    
-    frame.set_xticks(aLocs)
-    frame.set_yticks(xLocs)
-    
-    frame.set_xticklabels(aTicks)
-    frame.set_yticklabels(xTicks)
-    
-    frame.tick_params(axis="both", labelsize=15)
-    
-    if saveFig: fig.savefig(saveFig)
-    else: show()
-
-
-def parseArgs():
-    """ Testing some stuff """
-    parser = argparse.ArgumentParser(description=" Bifurcation Henon map")
-    parser.add_argument("a", help="Number of a points", type=int)
-    parser.add_argument("aMin", help="Minimum value of a", type=float)
-    parser.add_argument("aMax", help="Maximum value of a", type=float)
-#     parser.add_argument("size", help="Marker size", type=float)
-    parser.add_argument("b", help="Value of the b parameter", type=float)
-#     parser.add_argument("Name", help="Name of the saved figure", type=str)
-    
-    return vars(parser.parse_args())
-
-
-def main():
-    """ Main function that will be executed """
-#     aPoints,aMin, aMax, bv = parseArgs().values()
-#     av, xv, yv = henon_bifurc(aMin, aMax, aPoints, bvalue=bv)
-#     
-#     # Plotting
-#     fig = figure(figsize=(15,8))
-#     frame = fig.add_subplot(1,1,1)
-#     
-#     frame.scatter(xv, yv, s=0.001, color="navy")
-#     
-#     frame.tick_params(axis="both", labelsize=15)
-#     frame.set_xlabel("a", fontsize=20)
-#     frame.set_ylabel("x", fontsize=20)
-#     
-#     fig.savefig("bifurcation_test.pdf")
-    
-    aRange = (1, 1.4)
-    xRange = (1.4, -1.4)
-    aS, xS = 4250, 2500
-    figName = "bifurcation_4250_2500.pdf"
-    textFile = "bifur_4250_2500_data.txt"
-    
-#     grid = bifurc_grid(aS, xS, aRange, xRange, acc=int(1e5))
-#     np.savetxt(textFile, grid, delimiter="|", fmt="%1.4f")
-    plot_bifurc(textFile, int(1.25e3), aS, xS, aRange, xRange, saveFig=figName)
-    
-    
-
-if __name__ == "__main__":
-    main()
-    
+    else: show()    
