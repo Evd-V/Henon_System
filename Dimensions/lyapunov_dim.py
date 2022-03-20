@@ -6,31 +6,12 @@ import lyapunov as ly
 import create_grid as cg
 
 
-def lya_dim(nIts=int(1e5), a=1.4, b=0.3, xS=0, yS=0):
-    """ Compute the Lyapunov dimension of the Hénon map """
-    
-    x0 = y0 = 0                             # Starting values of Hénon map
-    cut = 1000                              # Points thrown away
-    
-    xv, yv = fh.Henon(xS, yS, nIts, a, b)           # Hénon map
-    exp = ly.Lyapunov(nIts-cut, xv[cut:], a, b)     # Lyapunov exponents
-    
-    m = 0
-    for ind in range(len(exp)):
-        if sum(exp[:ind+1]) >= 0: m += 1
-    
-    if max(exp) <= 0: dim = 0
-    elif sum(exp) > 0: dim = 2
-    else: dim = m + sum(exp[:m]) / abs(exp[m])
-    
-    return dim
-
 def lya_henon_dim(lya):
-    """ Assumes lya[0] >= lya[1]
+    """ Calculate Lyapunov dimension for the Hénon map, assumes 
+        lya[0] >= lya[1]. 
     """
     
     if max(lya) < 0: dim = 1
-#     elif max(lya) < acc and max(lya) > -acc: dim = 1
     elif sum(lya) > 0: dim = 2
     else: dim = 1 - lya[0] / lya[1]
     
@@ -77,8 +58,7 @@ def  det_lya_dim(maxData, minData, size):
 
 
 def plot_dim_grid(dimGrid, xRange, yRange, cMap=cm.inferno, fname=None):
-    """ 
-    """
+    """ Plot grid of pixels. """
     
     # Plotting
     fig = figure()
@@ -111,8 +91,7 @@ def plot_dim_grid(dimGrid, xRange, yRange, cMap=cm.inferno, fname=None):
 
 
 def create_dim_grid(fmax, fmin, frame_size, ystack, aRange, bRange):
-    """ 
-    """
+    """ Create grid of pixels representing the Lyapunov dimension. """
     
     max_generated = cg.read_data(fmax, frame_size)     # Max L.E.
     min_generated = cg.read_data(fmin, frame_size)     # Min L.E.
@@ -133,27 +112,3 @@ def create_dim_grid(fmax, fmin, frame_size, ystack, aRange, bRange):
     plot_dim_grid(tot_generated, bRange, aRange, fname=fName)
     
     return tot_generated
-
-
-def main():
-    """ Function that will be executed """
-    
-#     lDim = lya_dim()
-#     print(f"The dimension of the Hénon map is: {lDim:.8f}")
-    
-#     figName = "dim_var_b.pdf"
-#     aVals = np.linspace(1, 1.5, 1000)
-#     bVals = np.linspace(-0.05, 0.35, 1000)
-#     plot_dim(bVals, 1.4, a=False, saveFig=figName)
-    
-    fileMax = "lya2_max_540_1.txt"
-    fileMin = "lya2_min_540_1.txt"
-    frameSize = 90
-    yStack = 6
-    aVals = np.linspace(0.5, 1.5, 6*90)
-    bVals = np.linspace(-0.5, 0.5, 6*90)
-    create_dim_grid(fileMax, fileMin, frameSize, yStack, aVals, bVals)
-
-
-if __name__ == "__main__":
-    main()
