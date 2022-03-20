@@ -105,38 +105,3 @@ def red_box_dim(sF, nIts, xv, yv, xv2, yv2):
     boxDim = (np.log(nS) - np.log(n2S)) / np.log(2)     # The dimension
     
     return boxDim
-
-
-def main():
-    """ Main function that will be executed """
-    
-    # Parameters for the Hénon map
-    x0, y0 = 0, 0
-    a, b = 1.4, 0.3
-    nIts = int(1e5) - 1
-    
-    # Iterating the Hénon map
-    xv, yv = fh.Henon(x0, y0, nIts, a, b)               # Hénon map
-#     xv2, yv2 = fh.Henon(x0, y0, 2*nIts, a, b)           # 2x iterations
-    
-    # Parameters for finding the box counting dimension
-    steps = np.linspace(0, -14, 15)
-    stepSize = 2**steps
-    
-    figName = "naive_box_dim_2.pdf"
-    naive_box_dim(xv,yv, stepSize, saveFig=figName)
-    
-#     for stp in stepSize:
-#         print(f"Now processing s = {stp}")
-#         testDim = red_box_dim(stp, nIts, xv, yv, xv2, yv2)
-#         print(f"The dimension = {testDim}")
-#         print()
-    
-#     finalS = 2**(-7)
-#     
-#     boxDim = red_box_dim(finalS, nIts, xv, yv, xv2, yv2)
-#     print(f"The box dimension is: {boxDim}.")
-
-
-if __name__ == "__main__":
-    main()
