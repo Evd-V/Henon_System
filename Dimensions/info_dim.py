@@ -143,7 +143,8 @@ def mean_fig(nSize, nRuns):
 
 
 def weight_boxes(x, y, start, power, plot=False, text=False):
-    """ 
+    """ Function to find and plot the number of points in each box compared to 
+        the total number of boxes.
     """
     
     nBox = start**power                 # Number of boxes
@@ -200,8 +201,7 @@ def inform_dim(x, y, start, power):
 
 
 def change_dim(base, pRange, xv, yv, saveFig=None):
-    """ 
-    """
+    """ Function to find and plot the information dimension. """
     
     inf = [inform_dim(xv, yv, base, p) for p in pRange]         # Information
     
@@ -239,34 +239,3 @@ def change_dim(base, pRange, xv, yv, saveFig=None):
     
     if saveFig: fig.savefig(str(saveFig))
     else: show()
-
-
-def main():
-    """ Function that will be executed """
-    
-    # Setting constants
-    x0, y0 = 0, 0
-    its = int(1e3)
-    av, bv = 1.4, 0.3
-    
-    xv, yv = fh.Henon(x0, y0, its, av, bv)
-    figName = "info_dim.pdf"
-    
-#     hist_plot(xv, 96, saveFig=figName)
-#     return_plot(x0, y0, its, av, bv)
-#     box_henon(xv, yv, 4, saveFig=False)
-    
-    xv, yv = fh.Henon(x0, y0, its, av, bv)
-    start = 2
-    power = 11
-#     
-#     boxVals = weight_boxes(xv, yv, start, power)
-#     information = inform_dim(xv, yv, start, power)
-    
-#     powers = range(start, power)
-#     change_dim(start, powers, xv, yv, saveFig=False)
-
-    mean_fig(10, 10000)
-
-if __name__ == "__main__":
-    main()
